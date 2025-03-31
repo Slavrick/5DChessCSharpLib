@@ -1,0 +1,15 @@
+C:\Users\mavmi\Documents\5DRewrite\5DChess\5DChess\obj\Debug\net7.0\5DChess.csproj.AssemblyReference.cache
+C:\Users\mavmi\Documents\5DRewrite\5DChess\5DChess\obj\Debug\net7.0\5DChess.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\mavmi\Documents\5DRewrite\5DChess\5DChess\obj\Debug\net7.0\5DChess.AssemblyInfoInputs.cache
+C:\Users\mavmi\Documents\5DRewrite\5DChess\5DChess\obj\Debug\net7.0\5DChess.AssemblyInfo.cs
+C:\Users\mavmi\Documents\5DRewrite\5DChess\5DChess\obj\Debug\net7.0\5DChess.csproj.CoreCompileInputs.cache
+C:\Users\mavmi\Documents\5DRewrite\5DChess\5DChess\bin\Debug\net7.0\5DChess.exe
+C:\Users\mavmi\Documents\5DRewrite\5DChess\5DChess\bin\Debug\net7.0\5DChess.deps.json
+C:\Users\mavmi\Documents\5DRewrite\5DChess\5DChess\bin\Debug\net7.0\5DChess.runtimeconfig.json
+C:\Users\mavmi\Documents\5DRewrite\5DChess\5DChess\bin\Debug\net7.0\5DChess.dll
+C:\Users\mavmi\Documents\5DRewrite\5DChess\5DChess\bin\Debug\net7.0\5DChess.pdb
+C:\Users\mavmi\Documents\5DRewrite\5DChess\5DChess\obj\Debug\net7.0\5DChess.dll
+C:\Users\mavmi\Documents\5DRewrite\5DChess\5DChess\obj\Debug\net7.0\refint\5DChess.dll
+C:\Users\mavmi\Documents\5DRewrite\5DChess\5DChess\obj\Debug\net7.0\5DChess.pdb
+C:\Users\mavmi\Documents\5DRewrite\5DChess\5DChess\obj\Debug\net7.0\5DChess.genruntimeconfig.cache
+C:\Users\mavmi\Documents\5DRewrite\5DChess\5DChess\obj\Debug\net7.0\ref\5DChess.dll

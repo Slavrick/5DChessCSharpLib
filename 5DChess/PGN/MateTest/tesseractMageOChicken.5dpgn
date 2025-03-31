@@ -1,0 +1,23 @@
+[board "custom"]
+[size "8x8"]
+[color "black"]
+[r*nbqk*bnr*/p*p*p*p*p*p*p*p*/8/8/8/8/P*P*P*P*P*P*P*P*/R*NBQK*BNR*:0:0:b]
+
+0. (0T0)0000
+1. Nf3 / Nf6
+2. d4 / d5
+3. c3 / c6
+4. Ne5 / Bf5
+5. Bf4 / Bxb1
+6. Qxb1 / e6
+7. Bg5 / Nbd7
+8. Nf7 / Kxf7
+9. Qd3 / g6
+10. Bf6 / Qf6
+11. Qg3 / Ke8
+12. Rd1 / Be7
+13. (0T13)Qg3>>(0T10)g6 / (0T13)Qf6>>(0T9)f2
+14. (-1T10)Kxf2 / (-1T10)Nf6>x(+1T10)g6
+15. (-1T11)Qf3  (+1T11)Qxg6 / (-1T11)Nf6 (+1T11)Kxg6
+16. (-1T12)Bxf6+ (+1T12)Bf4 / (-1T12)Qxf6 (+1T12)Nh5
+17. (+1T13)Bf4>>(+1T11)f6# (>L+2)
