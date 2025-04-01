@@ -2,7 +2,7 @@ using FiveDChess;
 using System;
 using System.Diagnostics;
 
-namespace TestRewrite  {
+namespace Test  {
 	public class Benchmarker {
 
 		public static long Measure<T>(T obj, Action<T> method)

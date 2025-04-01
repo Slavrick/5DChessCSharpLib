@@ -7,21 +7,22 @@ using System.Threading.Tasks;
 using FileIO5D;
 using FiveDChess;
 
-namespace TestRewrite
+namespace Test
 {
     internal class GameStateTest
     {
 
         public static void TestGameStateMutation()
         {
-            Console.Write("Testing GameState Mutation: ");
-            GameState g5 = FENParserRewrite.ShadSTDGSM("C:\\Users\\mavmi\\Documents\\5DRewrite\\5DChess\\5DChess\\PGN\\MateTest\\tesseractMageOChicken.5dpgn");
-            GameState g1 = FENParserRewrite.ShadSTDGSM("C:\\Users\\mavmi\\Documents\\5DRewrite\\5DChess\\5DChess\\PGN\\Puzzles\\RookTactics4.PGN5.txt");
-            GameState g2 = FENParserRewrite.ShadSTDGSM("C:\\Users\\mavmi\\Documents\\5DRewrite\\5DChess\\5DChess\\PGN\\Puzzles\\RookTactics4.PGN5.txt");
-            GameState g3 = FENParserRewrite.ShadSTDGSM("C:\\Users\\mavmi\\Documents\\5DRewrite\\5DChess\\5DChess\\PGN\\MateTest\\test1.txt");
-            GameState g4 = FENParserRewrite.ShadSTDGSM("C:\\Users\\mavmi\\Documents\\5DRewrite\\5DChess\\5DChess\\PGN\\MateTest\\test1.txt");
-            GameState g6 = FENParserRewrite.ShadSTDGSM("C:\\Users\\mavmi\\Documents\\5DRewrite\\5DChess\\5DChess\\PGN\\MateTest\\tesseractMageOChicken.5dpgn");
+            Console.Write("     Testing GameState Mutation: ");
+            GameState g5 = FENParser.ShadSTDGSM("C:\\Users\\mavmi\\Documents\\5DRewrite\\5DChess\\5DChess\\PGN\\MateTest\\tesseractMageOChicken.5dpgn");
+            GameState g1 = FENParser.ShadSTDGSM("C:\\Users\\mavmi\\Documents\\5DRewrite\\5DChess\\5DChess\\PGN\\Puzzles\\RookTactics4.PGN5.txt");
+            GameState g2 = FENParser.ShadSTDGSM("C:\\Users\\mavmi\\Documents\\5DRewrite\\5DChess\\5DChess\\PGN\\Puzzles\\RookTactics4.PGN5.txt");
+            GameState g3 = FENParser.ShadSTDGSM("C:\\Users\\mavmi\\Documents\\5DRewrite\\5DChess\\5DChess\\PGN\\MateTest\\test1.txt");
+            GameState g4 = FENParser.ShadSTDGSM("C:\\Users\\mavmi\\Documents\\5DRewrite\\5DChess\\5DChess\\PGN\\MateTest\\test1.txt");
+            GameState g6 = FENParser.ShadSTDGSM("C:\\Users\\mavmi\\Documents\\5DRewrite\\5DChess\\5DChess\\PGN\\MateTest\\tesseractMageOChicken.5dpgn");
             if (!TestGameStateEquality(g1, g1)) throw new Exception("GameSate Test error");
+            if (TestGameStateEquality(g1, g3)) throw new Exception("GameSate Test error");
             if (!TestGameStateEquality(g1, g2)) throw new Exception("Parser inconsistency error");
             g2.IsMated();
             g4.IsMated();
@@ -29,6 +30,12 @@ namespace TestRewrite
             if (!TestGameStateEquality(g1, g2)) throw new Exception("Is Mated Mutates GameState");
             if (!TestGameStateEquality(g3, g4)) throw new Exception("Is Mated Mutates GameState");
             if (!TestGameStateEquality(g5, g6)) throw new Exception("Is Mated Mutates GameState");
+            g2.GetCurrentThreats();
+            g4.GetCurrentThreats();
+            g6.GetCurrentThreats();
+            if (!TestGameStateEquality(g1, g2)) throw new Exception("Get Current Threats Mutates GameState");
+            if (!TestGameStateEquality(g3, g4)) throw new Exception("Get Current Threats Mutates GameState");
+            if (!TestGameStateEquality(g5, g6)) throw new Exception("Get Current Threats Mutates GameState");
             Console.WriteLine("Passed!");
         }
 

@@ -1,7 +1,7 @@
 using System;
 using FiveDChess;
 
-namespace TestRewrite
+namespace Test
 {
 	public class CoordTester
 	{

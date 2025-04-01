@@ -2,7 +2,7 @@ using System;
 using FiveDChess;
 using FileIO5D;
 
-namespace TestRewrite
+namespace Test
 {
 	public class PrintTester
     {
@@ -10,7 +10,7 @@ namespace TestRewrite
         {
             Console.WriteLine("    Testing timeline Print:");
 			string filePath = "res://PGN/Puzzles/RookTactics4.PGN5.txt";
-			GameState g = FENParserRewrite.ShadSTDGSM(filePath);
+			GameState g = FENParser.ShadSTDGSM(filePath);
             Console.WriteLine(g.GetTimeline(0).ToString());
 			Console.WriteLine(" passed.");
         }

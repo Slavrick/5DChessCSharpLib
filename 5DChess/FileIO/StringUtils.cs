@@ -2,7 +2,7 @@ using System;
 using FiveDChess;
 
 namespace FileIO5D {
-	public class StringUtilsRewrite
+	public class StringUtils
 	{
 		/// <summary>
 		/// Returns the corresponding file from the int file sent, 0 indexed so a is 0 b is 1 and so on.

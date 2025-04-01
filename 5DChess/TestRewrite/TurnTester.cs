@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using FiveDChess;
 
-namespace TestRewrite
+namespace Test
 {
 	public class TurnTester
 	{

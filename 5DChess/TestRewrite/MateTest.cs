@@ -2,7 +2,7 @@ using System;
 using FiveDChess;
 using FileIO5D;
 
-namespace TestRewrite
+namespace Test
 {
 	public class MateTest
 	{
@@ -18,7 +18,7 @@ namespace TestRewrite
 
 		public static void TestMate(String FilePath)
 		{
-			GameState gsm = FENParserRewrite.ShadSTDGSM(FilePath);
+			GameState gsm = FENParser.ShadSTDGSM(FilePath);
 			long time2 = Benchmarker.MeasureAverage(gsm, x => x.IsMated(),10);
 			Console.Write(time2);
 			Console.WriteLine(" ns/run for: " + FilePath);

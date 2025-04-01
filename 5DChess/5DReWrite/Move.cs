@@ -93,17 +93,17 @@ namespace FiveDChess
 			string move = "";
 			if (Type == SPATIALMOVE)
 			{
-				move += "(" + Origin.L + "T" + Origin.T + ")" + piece + StringUtilsRewrite.SANString(Dest);
+				move += "(" + Origin.L + "T" + Origin.T + ")" + piece + StringUtils.SANString(Dest);
 			}
 			else if (Type == JUMPINGMOVE)
 			{
-				move += "(" + Origin.L + "T" + Origin.T + ")" + piece + StringUtilsRewrite.SANString(Origin) + ">("
-						+ Dest.L + "T" + Dest.T + ")" + StringUtilsRewrite.SANString(Dest);
+				move += "(" + Origin.L + "T" + Origin.T + ")" + piece + StringUtils.SANString(Origin) + ">("
+						+ Dest.L + "T" + Dest.T + ")" + StringUtils.SANString(Dest);
 			}
 			else if (Type == BRANCHINGMOVE)
 			{
-				move += "(" + Origin.L + "T" + Origin.T + ")" + piece + StringUtilsRewrite.SANString(Origin) + ">>("
-						+ Dest.L + "T" + Dest.T + ")" + StringUtilsRewrite.SANString(Dest);
+				move += "(" + Origin.L + "T" + Origin.T + ")" + piece + StringUtils.SANString(Origin) + ">>("
+						+ Dest.L + "T" + Dest.T + ")" + StringUtils.SANString(Dest);
 			}
 			return move;
 		}

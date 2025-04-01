@@ -9,7 +9,7 @@ using System.Drawing;
 //TODO fix style for this.
 namespace FileIO5D
 {
-    public class FENParserRewrite
+    public class FENParser
     {
         public static readonly string STDBOARDFEN = "[r*nbqk*bnr*/p*p*p*p*p*p*p*p*/8/8/8/8/P*P*P*P*P*P*P*P*/R*NBQK*BNR*:0:1:w]";
         public static readonly string STD_PRINCESS_BOARDFEN = "[r*nbsk*bnr*/p*p*p*p*p*p*p*p*/8/8/8/8/P*P*P*P*P*P*P*P*/R*NBSK*BNR*:0:1:w]";
@@ -496,20 +496,6 @@ namespace FileIO5D
             }
 
             sanCoordString = SANMatch.Value;
-            //if (sanCoordString[0] <= 'Z' )
-            //{
-            //    //strip piece, can add parsing for this in the future.
-            //    sanCoordString = sanCoordString.Substring(1);
-            //}
-            //if (sanCoordString[0] == 'x')
-            //{
-            //    //strip capture character, can add parsing for this in the future.
-            //    sanCoordString = sanCoordString.Substring(1);
-            //}
-            //if (sanCoordString[sanCoordString.Length - 1] == 'x')
-            //{
-            //    sanCoordString = sanCoordString.Substring(0, sanCoordString.Length-1);
-            //}
             CoordFive sanCoord = SANToCoord(sanCoordString);
             
             return CoordFive.Add(sanCoord,temporalCoord);

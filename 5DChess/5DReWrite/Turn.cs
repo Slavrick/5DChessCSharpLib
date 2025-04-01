@@ -110,7 +110,7 @@ namespace FiveDChess
             temp += ((TurnNum + 1) / 2) + "" + (TurnNum % 2 == 1 ? 'w' : 'b') + ".";
             foreach (Move m in Moves)
             {
-                temp += StringUtilsRewrite.ToShadString(m);
+                temp += StringUtils.ToShadString(m);
                 temp += " ";
             }
             return temp;

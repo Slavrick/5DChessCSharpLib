@@ -172,7 +172,7 @@ namespace FiveDChess
 			string temp = "  ";
 			for (int x = 0; x < Height; x++)
 			{
-				temp += StringUtilsRewrite. IntToFile(x);
+				temp += StringUtils. IntToFile(x);
 			}
 			temp += "\n";
 			for (int y = Height-1; y >= 0; y--)
