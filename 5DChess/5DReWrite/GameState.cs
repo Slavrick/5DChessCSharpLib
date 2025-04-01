@@ -465,32 +465,10 @@ namespace FiveDChess
 
         public void UndoTempMoves()
         {
-            if (TurnTLS.Count <= 0)
-            {
-                return;
-            }
-            for (int index = TurnTLS.Count - 1; index >= 0; index--)
-            {
-                if (GetTimeline(TurnTLS[index]).UndoMove())
-                {
-                    // this means that the timeline had only one board.
-                    Multiverse.RemoveAt(GetTimelineIndex(TurnTLS[index]));
-                    if (TurnTLS[index] == MaxTL)
-                    {
-                        MaxTL--;
-                    }
-                    else if (TurnTLS[index] == MinTL)
-                    {
-                        MinTL++;
-                    }
-                    else
-                    {
-                        throw new Exception("Tried To remove non outer timeline error.");
-                    }
-                }
-            }
-            CalcPresent();
-            DetermineActiveTLS();
+            bool startcolor = this.Color;
+            UndoTurn(TurnTLS.ToArray());
+            //The function may flip color, which we dont want. probably there is better way to handel this.
+            this.Color = startcolor;
             TurnTLS.Clear();
             TurnMoves.Clear();
         }
@@ -506,7 +484,7 @@ namespace FiveDChess
                 if (GetTimeline(tlmoved[index]).UndoMove())
                 {
                     // this means that the timeline had only one board.
-                    Multiverse.RemoveAt(GetTimelineIndex(TurnTLS[index]));
+                    Multiverse.RemoveAt(GetTimelineIndex(tlmoved[index]));
                     if (this.Color)
                     {
                         MaxTL--;
@@ -518,8 +496,8 @@ namespace FiveDChess
                 }
             }
             Color = !Color;
-            CalcPresent();
             DetermineActiveTLS();
+            CalcPresent();
             StartPresent = Present;
             return true;
         }
