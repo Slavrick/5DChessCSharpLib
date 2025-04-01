@@ -2,12 +2,12 @@
 using TestRewrite;
 
 
+FENParserTest.TestFENFileParser();
 TurnTester.TestTurnEquals();
 CoordTester.TestAllCoordFiveFuncs();
 FENParserTest.TestMoveParser();
 FENParserTest.TestSANParser();
 FENParserTest.TestShadParser();
-FENParserTest.TestFENFileParser();
 FENParserTest.TestShadFEN();
 FENParserTest.TestAmbiguityInfoParser();
 MateTest.BenchmarkMates();

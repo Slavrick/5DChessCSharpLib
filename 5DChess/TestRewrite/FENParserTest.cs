@@ -63,7 +63,7 @@ namespace TestRewrite
 			CoordFive h6 = FENParserRewrite.HalfStringToCoord("(+0T3)Nh7", true);
 			CoordFive h7 = FENParserRewrite.HalfStringToCoord("(2T3)Nh7", true);
 			CoordFive h8 = FENParserRewrite.HalfStringToCoord("(-1T3)Nh7", true);
-            CoordFive h9 = FENParserRewrite.HalfStringToCoord("(-1T12)Bxf6+", false);
+			CoordFive h9 = FENParserRewrite.HalfStringToCoord("(-1T12)Bxf6+", false);
             CoordTester.TestCoord(h1, 0, 0, 0, 0);
 			CoordTester.TestCoord(h2, 0, 0, 0, 0);
 			CoordTester.TestCoord(h3, 4, 2, 1, 0);

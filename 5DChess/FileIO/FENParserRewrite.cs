@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
 using FiveDChess;
 using System.IO;
+using System.Text.RegularExpressions;
+using System.Drawing;
 
 //TODO fix style for this.
 namespace FileIO5D
@@ -28,73 +30,68 @@ namespace FileIO5D
         public static GameState ShadSTDGSM(string fileLocation)
         {
             //Read in the file, initialize variables.
-            string[] linesarray = FileToLines(fileLocation);
-            List<string> lines = new List<string>(linesarray);
-            string size = null;
-            string variant = null;
-            string color = null;
+            string[] lines = FileToLines(fileLocation);
+            Dictionary<string, string> headers = new Dictionary<string, string>();
             List<string> fenBoards = new List<string>();
-            List<string> moves = new List<string>();
+            List<string> SANLines = new List<string>();
             bool evenStarters = false;
             //Separate moves by header, FEN, SAN
             foreach (string line in lines)
             {
-                if (line.Length == 0)
+                string trimmmedLine = line.Trim();
+                if (trimmmedLine.Length == 0)
                 {
                     continue;
                 }
-                if (line[0] == '[')
-                {
-                    string line2 = line;
-                    if (line.Contains("\""))
+                if (trimmmedLine[0] == '[')
+                { 
+                    if (trimmmedLine.Contains(":") && !trimmmedLine.Contains("\""))
                     {
-                        line2 = line.ToLower();
-                    }
-                    if (line2.Contains("size"))
-                    {
-                        size = line2;
-                    }
-                    if (line2.Contains("variant") || line2.Contains("board"))
-                    {
-                        variant = line2;
-                    }
-                    if (line.Contains("color"))
-                    {
-                        color = line2;
-                    }
-                    if (line2.Contains(":") && !line2.Contains("\""))
-                    {
-                        fenBoards.Add(line2);
-                        if (line2.Contains("-0"))
+                        fenBoards.Add(trimmmedLine);
+                        if (trimmmedLine.Contains("-0"))
                         {
                             evenStarters = true;
                         }
+                        continue;
                     }
+                    int bracketIndex = trimmmedLine.IndexOf('[');
+                    int quoteIndex = trimmmedLine.IndexOf("\"");
+                    int lastQuoteIndex = trimmmedLine.LastIndexOf("\"");
+                    string headerKey = trimmmedLine.Substring(bracketIndex + 1,quoteIndex - (bracketIndex + 1)).Trim().ToLower();
+                    string headerValue = trimmmedLine.Substring(quoteIndex + 1, lastQuoteIndex - quoteIndex - 1).Trim();
+                    headers.Add(headerKey, headerValue);
                 }
                 else
                 {
-                    moves.Add(line);
+                    SANLines.Add(line);
                 }
             }
-
-            Timeline[] starters;
-            GameState gsm = null;
+            //Parse Headers.
+            string size = null;
+            string variant = null;
+            string color = null;
+            if (headers.ContainsKey("size")) size = headers["size"];
+            if (headers.ContainsKey("board")) variant = headers["board"];
+            if (headers.ContainsKey("color")) color = headers["color"];
             
             //Determine if there is a variant that can be pulled from.
+            GameState gsm = null;
+            Timeline[] starters;
             if (variant != null)
             {
-                string boardChosen = variant.Substring(variant.IndexOf("\"") + 1, variant.LastIndexOf("\"") - variant.IndexOf("\"") - 1);
+                string boardChosen = variant.Trim();
                 if (boardChosen.Equals("custom", StringComparison.OrdinalIgnoreCase))
                 {
                     if (size == null)
                     {
                         return null;
                     }
-                    int width = int.Parse(size.Substring(size.IndexOf('\"') + 1, size.IndexOf('x') - size.IndexOf('\"') - 1));
-                    int height = int.Parse(size.Substring(size.IndexOf('x') + 1, size.LastIndexOf('\"') - size.IndexOf('x') - 1));
+                    string[] dimensions = size.Split('x');
+                    int width = int.Parse(dimensions[0]);
+                    int height = int.Parse(dimensions[1]);
                     int count = 0;
                     starters = new Timeline[fenBoards.Count];
-                    foreach (string FEN in fenBoards)
+                    foreach (string FEN in fenBoards)//TODO make sure the file is not passing in mutliple of the same timeline.
                     {
                         starters[count++] = GetTimelineFromString(FEN, width, height, evenStarters);
                     }
@@ -125,22 +122,30 @@ namespace FileIO5D
             }
 
             //Handle SAN Moves
+            //Start by splitting up the turns
+            //TODO this might break if there are specific types of comments with '/' in it
             List<string> turns = new List<string>();
-            foreach (string s in moves)
+            foreach (string s in SANLines)
             {
-                if (s.Contains("/"))
+                string trimmed = s.Trim();
+                Match m = Regex.Match(s, "^\\d*(w|W|b|B)?\\.");
+                if(m.Success)
                 {
-                    turns.AddRange(s.Split('/'));
+                    trimmed = trimmed.Substring(trimmed.IndexOf(".") + 1);
+                }
+                //TODO strip the turn number from the thing.
+                if (trimmed.Contains("/"))
+                {
+                    turns.AddRange(trimmed.Split('/'));
                 }
                 else
                 {
-                    turns.Add(s);
+                    turns.Add(trimmed);
                 }
             }
-
+            //Parse Each turn
             foreach (string strturn in turns)
             {
-                //(0T13)Qf6>>(0T9)f2 is failing parsing... is a black move but returns a white move.
                 if (strturn.Length == 0)
                 {
                     continue;//XXX this validation might happen down the chain, whatever just doing this to get it to work.
@@ -333,7 +338,7 @@ namespace FileIO5D
 
         public static Move GetShadMove(GameState g, string move, bool evenStarters)
         {
-            move = System.Text.RegularExpressions.Regex.Replace(move, "[~!#]", "");
+            move = System.Text.RegularExpressions.Regex.Replace(move, "[~!#+]", "");
             if (move.Contains("(") && move.IndexOf("(") != move.LastIndexOf("("))
             {
                 Move parsedMove = FullStringToCoord(move, evenStarters);
@@ -462,26 +467,52 @@ namespace FileIO5D
         /// <returns></returns>
         public static CoordFive HalfStringToCoord(string halfmove, bool evenStarters)
         {
-            string sancoord;
-            if (halfmove[halfmove.Length - 1] == 'x')
+            //match a temporal coordinate. and parse it
+            Match temporalMatch = Regex.Match(halfmove, "\\(-?\\+?\\d*T-?\\d*\\)");
+            string temporalCoordString = "";
+            string sanCoordString = halfmove;
+            CoordFive temporalCoord;
+            if (temporalMatch.Success)
             {
-                sancoord = halfmove.Substring(halfmove.Length - 3, 2);
+                temporalCoordString = temporalMatch.Value;
+                temporalCoord = TemporalToCoord(temporalCoordString,evenStarters);
+                sanCoordString = halfmove.Substring(temporalMatch.Index + temporalMatch.Length);
             }
             else
             {
-                sancoord = halfmove.Substring(halfmove.Length - 2);
+                temporalCoord = new CoordFive(0, 0, -1, 0);
             }
-            CoordFive coord = SANToCoord(sancoord);
-            if (halfmove.Contains("("))
+
+            //the rest is the san Coord.
+            Match SANMatch = Regex.Match(sanCoordString, "[a-z]\\d+");
+            if(SANMatch.Success)
             {
-                coord.Add(TemporalToCoord(halfmove.Substring(halfmove.IndexOf('('), halfmove.IndexOf(')') + 1), evenStarters));
+                //this is needed if for example you have something like Ne7e4
+                Match lastSANMatch = Regex.Match(sanCoordString.Substring(SANMatch.Index + 2), "[a-z]\\d+");
+                if(lastSANMatch.Success)
+                {
+                    SANMatch = lastSANMatch;
+                }
             }
-            else
-            {
-                coord.L = 0;
-                coord.T = -1;
-            }
-            return coord;
+
+            sanCoordString = SANMatch.Value;
+            //if (sanCoordString[0] <= 'Z' )
+            //{
+            //    //strip piece, can add parsing for this in the future.
+            //    sanCoordString = sanCoordString.Substring(1);
+            //}
+            //if (sanCoordString[0] == 'x')
+            //{
+            //    //strip capture character, can add parsing for this in the future.
+            //    sanCoordString = sanCoordString.Substring(1);
+            //}
+            //if (sanCoordString[sanCoordString.Length - 1] == 'x')
+            //{
+            //    sanCoordString = sanCoordString.Substring(0, sanCoordString.Length-1);
+            //}
+            CoordFive sanCoord = SANToCoord(sanCoordString);
+            
+            return CoordFive.Add(sanCoord,temporalCoord);
         }
 
         /// <summary>
