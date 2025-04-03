@@ -151,7 +151,7 @@ namespace FiveDChess
             }
             foreach (Move m in turn.Moves)
             {
-                if (!this.MakeMove(m))
+                if (!this.MakeMove(m,false))
                 {
                     //UndoTempMoves(); not sure if this is neede.
                     return false;

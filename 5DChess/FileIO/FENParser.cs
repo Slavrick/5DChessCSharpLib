@@ -284,7 +284,7 @@ namespace FileIO5D
                         {
                             compiledTurns.Add(new Turn(compiledMoves.ToArray()));
                             compiledMoves.Clear();
-                            bool turnStatus =  gsm.MakeTurn(compiledTurns.Last().Moves);
+                            bool turnStatus =  gsm.MakeTurn(compiledTurns.Last());
                             if (!turnStatus)
                             {
                                 throw new Exception("Turn not properly added to gamestate.");
