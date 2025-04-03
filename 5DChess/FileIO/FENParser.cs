@@ -5,10 +5,17 @@ using FiveDChess;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Drawing;
+using System.Reflection.Metadata.Ecma335;
 
 //TODO fix style for this.
 namespace FileIO5D
 {
+    public enum TokenType
+    {
+        UNKNOWN, TURNINDICATOR, HALFTURNINDICATOR, SAN, TEMPORALCOORD, TURNTERMINATOR, PROMOTION, FULLCOORDINATE, HALFCOORDINATE, BRANCHINGMOVE, 
+        CASTLE, LONGCASTLE, NULLMOVE, COMMENT, BRANCH, PRESENTSHIFTED,LAYERCREATED
+    }
+
     public class FENParser
     {
         public static readonly string STDBOARDFEN = "[r*nbqk*bnr*/p*p*p*p*p*p*p*p*/8/8/8/8/P*P*P*P*P*P*P*P*/R*NBQK*BNR*:0:1:w]";
@@ -27,7 +34,7 @@ namespace FileIO5D
             return linesarray;
         }
 
-        public static GameState ShadSTDGSM(string fileLocation)
+        public static GameStateManager ShadSTDGSM(string fileLocation)
         {
             //Read in the file, initialize variables.
             string[] lines = FileToLines(fileLocation);
@@ -73,9 +80,9 @@ namespace FileIO5D
             if (headers.ContainsKey("size")) size = headers["size"];
             if (headers.ContainsKey("board")) variant = headers["board"];
             if (headers.ContainsKey("color")) color = headers["color"];
-            
+
             //Determine if there is a variant that can be pulled from.
-            GameState gsm = null;
+            GameStateManager gsm = null;
             Timeline[] starters;
             if (variant != null)
             {
@@ -96,19 +103,19 @@ namespace FileIO5D
                         starters[count++] = GetTimelineFromString(FEN, width, height, evenStarters);
                     }
                     Array.Sort(starters);
-                    gsm = new GameState(starters, width, height, evenStarters, true, starters[0].Layer, null);
+                    gsm = new GameStateManager(starters, width, height, evenStarters, true, starters[0].Layer, null);
                 }
                 else if (boardChosen.Equals("standard", StringComparison.OrdinalIgnoreCase))
                 {
                     starters = new Timeline[1];
                     starters[0] = GetTimelineFromString(STDBOARDFEN, 8, 8, false);
-                    gsm = new GameState(starters, 8, 8, false, true, starters[0].Layer, null);
+                    gsm = new GameStateManager(starters, 8, 8, false, true, starters[0].Layer, null);
                 }
                 else if (boardChosen.Equals("standard-princess", StringComparison.OrdinalIgnoreCase))
                 {
                     starters = new Timeline[1];
                     starters[0] = GetTimelineFromString(STD_PRINCESS_BOARDFEN, 8, 8, false);
-                    gsm = new GameState(starters, 8, 8, false, true, starters[0].Layer, null);
+                    gsm = new GameStateManager(starters, 8, 8, false, true, starters[0].Layer, null);
                 }
             }
             else
@@ -119,6 +126,97 @@ namespace FileIO5D
             if (color != null)
             {
                 gsm.Color = color.Contains("white");
+            }
+
+            //Turns into tokens.
+            List<string> tokenString = new List<string>();
+            List<TokenType> tokenTypes = new List<TokenType>();
+            foreach(string s in SANLines)
+            {
+                string sanLine = s;
+                Match turnIndicatorMatch = Regex.Match(sanLine, "^\\d*(w|W|b|B)?\\.");
+                if(turnIndicatorMatch.Success)
+                {
+                    tokenString.Add(turnIndicatorMatch.Value);
+                    tokenTypes.Add(TokenType.TURNINDICATOR);
+                    sanLine = sanLine.Substring(turnIndicatorMatch.Length);
+                }
+                string[] splitLine = sanLine.Split(' ');
+
+                bool commentStatus = false;
+                string comment = "";
+                foreach(string partial in splitLine)
+                {
+                    string part = partial;
+                    if(commentStatus)
+                    {
+                        if (part.Contains("}"))
+                        {
+                            commentStatus = false;
+                            comment += part.Substring(0, part.IndexOf("}") + 1);
+                            tokenString.Add(comment);
+                            tokenTypes.Add(TokenType.COMMENT);
+                            part = part.Substring(part.IndexOf("}") + 1);
+                            if (part.Length == 0){ continue; }
+                        }
+                        else
+                        {
+                            comment += ' ' + part;
+                            continue;
+                        }
+                    }
+                    if (part.Contains("{"))
+                    {
+                        commentStatus = true;
+                        comment += part.Substring(part.IndexOf("{"));
+                        part = part.Substring(0, part.IndexOf("{"));
+                        if (part.Length == 0) { continue; }
+                    }
+                    if(part.Length == 0) { continue; }
+                    if(part.Equals("/"))
+                    {
+                        tokenString.Add(part);
+                        tokenTypes.Add(TokenType.TURNTERMINATOR);
+                        continue;
+                    }
+                    Match halfCoordinateMatch = Regex.Match(part, "\\([+\\-]?\\d+T-?\\d+\\)\\S+");
+                    Match fullCoordinateMatch = Regex.Match(part, "\\([+\\-]?\\d+T-?\\d+\\)\\S+(>+)?x?\\([+\\-]?\\d+T-?\\d+\\)\\S+");
+                    Match timeshiftMatch = Regex.Match(part, "\\(~T[+\\-]?(\\d+)\\)");
+                    Match timelineCreatedMatch = Regex.Match(part, "\\(>L([+\\-]?\\d+)\\)");
+                    Match simpleSANMatch = Regex.Match(part, "[NBRQKCYUDBP]?\\w{0,2}x?\\w{0,2}");
+                    if(fullCoordinateMatch.Success)
+                    {
+                        tokenString.Add(fullCoordinateMatch.Value);
+                        tokenTypes.Add(TokenType.FULLCOORDINATE);
+                        continue;
+                    }
+                    else if (halfCoordinateMatch.Success)
+                    {
+                        tokenString.Add(halfCoordinateMatch.Value);
+                        tokenTypes.Add(TokenType.HALFCOORDINATE);
+                        continue;
+                    }
+                    else if (simpleSANMatch.Success)
+                    {
+                        tokenString.Add(simpleSANMatch.Value);
+                        tokenTypes.Add(TokenType.SAN);//TODO make sure this is the right token.
+                        continue;
+                    }
+                    else if(timeshiftMatch.Success)
+                    {
+                        tokenString.Add(timeshiftMatch.Value);
+                        tokenTypes.Add(TokenType.PRESENTSHIFTED);
+                        continue;
+                    }
+                    else if (timelineCreatedMatch.Success)
+                    {
+                        tokenString.Add(timelineCreatedMatch.Value);
+                        tokenTypes.Add(TokenType.LAYERCREATED);
+                        continue;
+                    }
+                    tokenString.Add(part);
+                    tokenTypes.Add(TokenType.UNKNOWN);
+                }
             }
 
             //Handle SAN Moves
@@ -143,6 +241,8 @@ namespace FileIO5D
                     turns.Add(trimmed);
                 }
             }
+
+
             //Parse Each turn
             foreach (string strturn in turns)
             {
@@ -150,7 +250,6 @@ namespace FileIO5D
                 {
                     continue;//XXX this validation might happen down the chain, whatever just doing this to get it to work.
                 }
-                //TODO make this back to the GameStateManager Case with Turn Class used.
                 Move[] parsed = StringToTurn(gsm, strturn, evenStarters)?.Moves; //XXX Remove after debugging
                 if(parsed == null)
                 {

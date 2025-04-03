@@ -452,7 +452,7 @@ namespace FiveDChess
         public bool SubmitMoves()
         {
             bool presColor = CalcPresent();
-            if (!(presColor == Color)) //TODO(!OpponentCanCaptureKing() && !(presColor == Color)) 
+            if (!OpponentCanCaptureKing() && !(presColor == Color)) 
             {
                 TurnTLS.Clear();
                 TurnMoves.Clear();
