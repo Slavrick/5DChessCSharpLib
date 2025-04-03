@@ -15,11 +15,11 @@ namespace Test
         public static void TestGameStateMutation()
         {
             Console.Write("     Testing GameState Mutation: ");
-            GameState g5 = FENParser.ShadSTDGSM("C:\\Users\\mavmi\\Documents\\5DRewrite\\5DChess\\5DChess\\PGN\\MateTest\\tesseractMageOChicken.5dpgn");
             GameState g1 = FENParser.ShadSTDGSM("C:\\Users\\mavmi\\Documents\\5DRewrite\\5DChess\\5DChess\\PGN\\Puzzles\\RookTactics4.PGN5.txt");
             GameState g2 = FENParser.ShadSTDGSM("C:\\Users\\mavmi\\Documents\\5DRewrite\\5DChess\\5DChess\\PGN\\Puzzles\\RookTactics4.PGN5.txt");
             GameState g3 = FENParser.ShadSTDGSM("C:\\Users\\mavmi\\Documents\\5DRewrite\\5DChess\\5DChess\\PGN\\MateTest\\test1.txt");
             GameState g4 = FENParser.ShadSTDGSM("C:\\Users\\mavmi\\Documents\\5DRewrite\\5DChess\\5DChess\\PGN\\MateTest\\test1.txt");
+            GameState g5 = FENParser.ShadSTDGSM("C:\\Users\\mavmi\\Documents\\5DRewrite\\5DChess\\5DChess\\PGN\\MateTest\\tesseractMageOChicken.5dpgn");
             GameState g6 = FENParser.ShadSTDGSM("C:\\Users\\mavmi\\Documents\\5DRewrite\\5DChess\\5DChess\\PGN\\MateTest\\tesseractMageOChicken.5dpgn");
             if (!TestGameStateEquality(g1, g1)) throw new Exception("GameSate Test error");
             if (TestGameStateEquality(g1, g3)) throw new Exception("GameSate Test error");
