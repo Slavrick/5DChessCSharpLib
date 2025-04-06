@@ -1,4 +1,5 @@
 ﻿// See https://aka.ms/new-console-template for more information
+using FileIO5D;
 using Test;
 using TestRewrite;
 
@@ -12,6 +13,9 @@ FENParserTest.TestShadFEN();
 FENParserTest.TestAmbiguityInfoParser();
 GameStateTest.TestGameStateMutation();
 MateTest.BenchmarkMates();
+FENExporter.ExportGameState(FENParser.ShadSTDGSM("C:\\Users\\mavmi\\Desktop\\Java 5d\\5dchessEngine\\res\\testPGNs\\CastleTest3.txt"), "C:\\Users\\mavmi\\Desktop\\TestNewThing.txt");
+
+FENParserTest.Test5Dinterfaceoutput();
 
 
 ConsolePlay c = new ConsolePlay("C:\\Users\\mavmi\\Documents\\5DRewrite\\5DChess\\5DChess\\PGN\\Standard.PGN5.txt");

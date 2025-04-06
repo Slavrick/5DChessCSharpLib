@@ -98,7 +98,12 @@ namespace Test
             Console.WriteLine(" passed.");
 		}
 
-		public static void TestDefaultGame()
+		public static void Test5Dinterfaceoutput()
+		{
+            FENParser.ShadSTDGSM("C:\\Users\\mavmi\\Desktop\\standardoutput.txt");
+        }
+
+        public static void TestDefaultGame()
 		{
 			
 		}

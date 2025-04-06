@@ -159,5 +159,20 @@ namespace FileIO5D {
             }
             return temp;
 		}
-	}
+
+        public static string TurnExportString(Turn t, int type = 0)
+        {
+            if (t.Moves == null)
+            {
+                return "";
+            }
+            string temp = "";
+			foreach (Move m in t.Moves)
+			{
+				temp += ToRawShadString(m);
+				temp += " ";
+			}
+            return temp;
+        }
+    }
 }

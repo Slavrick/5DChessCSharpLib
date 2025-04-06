@@ -284,7 +284,7 @@ namespace FileIO5D
                         {
                             compiledTurns.Add(new Turn(compiledMoves.ToArray()));
                             compiledMoves.Clear();
-                            bool turnStatus =  gsm.MakeTurn(compiledTurns.Last());
+                            bool turnStatus = gsm.MakeTurn(compiledTurns[compiledTurns.Count - 1]);//List.Last() doesn't work on godot.
                             if (!turnStatus)
                             {
                                 throw new Exception("Turn not properly added to gamestate.");
@@ -324,7 +324,7 @@ namespace FileIO5D
             {
                 compiledTurns.Add(new Turn(compiledMoves.ToArray()));
                 compiledMoves.Clear();
-                bool turnStatus = gsm.MakeTurn(compiledTurns.Last().Moves);
+                bool turnStatus = gsm.MakeTurn(compiledTurns[compiledTurns.Count - 1]);
                 if (!turnStatus)
                 {
                     throw new Exception("Turn not properly added to gamestate.");
