@@ -35,7 +35,6 @@ namespace FiveDChess
                 return newNode;
             }
 
-
             public override string ToString()
             {
                 return NodeID + ", " + Data.ToString();

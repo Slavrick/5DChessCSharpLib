@@ -25,7 +25,7 @@ namespace FiveDChess
             Index = TurnTree.Root;
         }
 
-        public bool SubmitMoves()
+        public new bool SubmitMoves()
         {
             bool presColor = CalcPresent();
             if (!OpponentCanCaptureKing() && !(presColor == Color))

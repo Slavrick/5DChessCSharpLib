@@ -46,6 +46,11 @@ namespace FileIO5D {
 
 		public static string ToRawShadString(Move m)
 		{
+			if(m.SpecialType == Move.NULLMOVE)
+			{
+				return $"({m.Origin.L}T{m.Origin.T})0000";
+
+			}
 			if (m.SpecialType == Move.CASTLE)
 			{
 				if (m.Dest.X > m.Origin.X)

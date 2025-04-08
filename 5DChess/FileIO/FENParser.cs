@@ -1,11 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Security.Cryptography.X509Certificates;
 using FiveDChess;
 using System.IO;
 using System.Text.RegularExpressions;
-using System.Drawing;
-using System.Reflection.Metadata.Ecma335;
 
 //TODO fix style for this.
 namespace FileIO5D
