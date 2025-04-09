@@ -479,19 +479,24 @@ namespace FiveDChess
             {
                 return false;
             }
+            //This needs to be in reverse... In case you branch multiple times in a turn, will not be able to index properly
             for (int index = tlmoved.Length - 1; index >= 0; index--)
             {
                 if (GetTimeline(tlmoved[index]).UndoMove())
                 {
                     // this means that the timeline had only one board.
                     Multiverse.RemoveAt(GetTimelineIndex(tlmoved[index]));
-                    if (this.Color)
+                    if (tlmoved[index] == MaxTL)
                     {
                         MaxTL--;
                     }
-                    else
+                    else if(tlmoved[index] == MinTL)
                     {
                         MinTL++;
+                    }
+                    else
+                    {
+                        throw new Exception("Non Outer Timeline Removed: " + tlmoved[index].ToString());
                     }
                 }
             }
