@@ -1,13 +1,19 @@
 ﻿using System;
+using System.Collections.Generic;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace FiveDChess
 {
-    class AnnotationTree
+    public class AnnotationTree
     {
 
         public Node Root;
         public static int GlobalIDCTR = 0;
 
+        public AnnotationTree(Turn rootData)
+        {
+            Root = new Node(rootData, null);
+        }
 
         public class Node
         {
@@ -43,6 +49,11 @@ namespace FiveDChess
                 Children.Add(newchild);
                 return newchild;
             }
+
+            public override string ToString()
+            {
+                return NodeID + ", " + AT.T.ToString();
+            }
         }
         
         public static bool Contains(Node tree, int target)
@@ -65,6 +76,12 @@ namespace FiveDChess
             return false;
         }
 
+        /// <summary>
+        /// Contains, but only goes to depth 1
+        /// </summary>
+        /// <param name="tree"></param>
+        /// <param name="target"></param>
+        /// <returns></returns>
         public static bool ContainsChild(Node tree, Turn target)
         {
             if (tree.AT.T.Equals(target)) return true;
@@ -75,7 +92,28 @@ namespace FiveDChess
             return false;
         }
 
-        public List<int> NavPath(Node tree, int target)
+        public static Node FindNode(Node n, Turn target)
+        {
+            if (n.AT.T.Equals(target))
+            {
+                return n;
+            }
+            if (target.TurnNum <= n.AT.T.TurnNum)
+            {
+                return null;
+            }
+            foreach (var child in n.Children)
+            {
+                Node find = FindNode(child, target);
+                if (find != null)
+                {
+                    return find;
+                }
+            }
+            return null;
+        }
+
+        public static List<int> NavPath(Node tree, int target)
         {
             if(tree.NodeID == target) return new List<int>();
             for(int i = 0; i < tree.Children.Count;i++)
@@ -90,8 +128,50 @@ namespace FiveDChess
             return null;
         }
 
-        //findnode -> node
-        //getnodes/labels/etc linear
+        public static List<AnnotatedTurn> GetPastTurns(Node n)
+        {
+            List<AnnotatedTurn> pastTurns = new List<AnnotatedTurn>();
+            Node index = n;
+            while(index != null)
+            {
+                pastTurns.Add(index.AT);
+                index = index.Parent;
+            }
+            pastTurns.Reverse();
+            return pastTurns;
+        }
 
+        public static List<string> GetLabels(Node tree, int nesting = 0)
+        {
+            List<string> labels = new List<string>();
+            string label = new string(' ', nesting * 4);
+            labels.Add(label + tree.AT.T.ToString());
+            if (tree.Children.Count > 0)
+            {
+                for (int i = 1; i < tree.Children.Count; i++)
+                {
+                    labels.AddRange(GetLabels(tree.Children[i], nesting + 1));
+                }
+                labels.AddRange(GetLabels(tree.Children[0], nesting));
+            }
+            return labels;
+        }
+        
+        public static List<Node> GetNodesLinear(Node tree)
+        {
+            List<Node> nodes = new List<Node> { tree };
+            if (tree.Children.Count > 0)
+            {
+                for (int i = 1; i < tree.Children.Count; i++)
+                {
+                    nodes.AddRange(GetNodesLinear(tree.Children[i]));
+                }
+                nodes.AddRange(GetNodesLinear(tree.Children[0]));
+            }
+            return nodes;
+        }
+
+        //findnode -> node
+        //getnodes/etc linear
     }
 }

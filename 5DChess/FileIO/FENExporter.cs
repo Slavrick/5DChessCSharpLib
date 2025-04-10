@@ -40,8 +40,10 @@ namespace FileIO5D
             string moves = "";
             bool oddTurn = true;
             int turnNum = 1;
-            foreach (Turn t in gsm.Turns)
+            List<AnnotatedTurn> turnList = AnnotationTree.GetPastTurns(gsm.Index);
+            foreach (AnnotatedTurn at in turnList)
             {
+                Turn t = at.T;
                 if (oddTurn)
                 {
                     moves += turnNum.ToString() + ". ";

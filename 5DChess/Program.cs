@@ -1,10 +1,9 @@
 ﻿// See https://aka.ms/new-console-template for more information
-using FileIO5D;
 using Test;
 using TestRewrite;
 
-TurnTreeTester.TestRewind();
 
+TurnTreeTester.TestRewind();
 FENParserTest.TestFENFileParser();
 TurnTester.TestTurnEquals();
 CoordTester.TestAllCoordFiveFuncs();
