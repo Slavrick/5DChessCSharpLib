@@ -24,16 +24,18 @@ namespace FiveDChess
 
             public Node( Turn turn, Node parent)
             {
+                this.Parent = parent;
+                this.NodeID = GlobalIDCTR++;
                 this.Children = new List<Node>();
                 AT = new AnnotatedTurn( turn );
-                this.NodeID = GlobalIDCTR++;
             }
 
             public Node (AnnotatedTurn at, Node parent)
             {
-                AT = at;
-                this.NodeID = GlobalIDCTR++;
                 this.Parent = parent;
+                this.NodeID = GlobalIDCTR++;
+                this.Children = new List<Node>();
+                AT = at;
             }
 
             public Node AddChild( Turn t )

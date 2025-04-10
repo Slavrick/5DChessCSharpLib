@@ -3,8 +3,8 @@ using Test;
 using TestRewrite;
 
 
-TurnTreeTester.TestRewind();
 FENParserTest.TestFENFileParser();
+TurnTreeTester.TestRewind();
 TurnTester.TestTurnEquals();
 CoordTester.TestAllCoordFiveFuncs();
 FENParserTest.TestMoveParser();
