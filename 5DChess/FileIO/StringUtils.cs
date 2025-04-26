@@ -1,5 +1,4 @@
 using System;
-using System.Drawing;
 using FiveDChess;
 
 namespace FileIO5D {
@@ -208,11 +207,11 @@ namespace FileIO5D {
 		{
 			string exportString = "";
 			//exportString += TurnExportString(at.T);
-			if (at.Annotation != null)
+			if (at.Annotation != null && at.Annotation.Length > 0)
 			{
 				exportString += $" {{ {at.Annotation} }}";
 			}
-			if (at.Highlights != null)
+			if (at.Highlights != null && at.Highlights.Count > 0)
 			{
 				exportString += $" {{ [%csl ";
 				for (int i = 0; i < at.Highlights.Count; i++)
@@ -223,7 +222,7 @@ namespace FileIO5D {
 				}
 				exportString += $" ] }} ";
 			}
-			if (at.Arrows != null)
+			if (at.Arrows != null && at.Arrows.Count > 0)
 			{
 				exportString += $" {{ [%cal ";
 				for (int i = 0; i < at.Arrows.Count; i++)

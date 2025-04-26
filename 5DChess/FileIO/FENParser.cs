@@ -9,8 +9,8 @@ namespace FileIO5D
 {
     public enum TokenType
     {
-        UNKNOWN, TURNINDICATOR, HALFTURNINDICATOR, SAN, TEMPORALCOORD, TURNTERMINATOR, PROMOTION, FULLCOORDINATE, HALFCOORDINATE, 
-        CASTLE, LONGCASTLE, NULLMOVE, COMMENT, PRESENTSHIFTED, LAYERCREATED
+        UNKNOWN, TURNINDICATOR, HALFTURNINDICATOR, SAN, TEMPORALCOORD, TURNTERMINATOR, PROMOTION, FULLCOORDINATE, HALFCOORDINATE,
+        CASTLE, LONGCASTLE, NULLMOVE, COMMENT, PRESENTSHIFTED, LAYERCREATED, ARROWS, HIGHLIGHTS, SIDELINE, DESCRIPTION
     }
 
     public class FENParser
@@ -49,7 +49,7 @@ namespace FileIO5D
                     continue;
                 }
                 if (trimmmedLine[0] == '[')
-                { 
+                {
                     if (trimmmedLine.Contains(":") && !trimmmedLine.Contains("\""))
                     {
                         fenBoards.Add(trimmmedLine);
@@ -62,7 +62,7 @@ namespace FileIO5D
                     int bracketIndex = trimmmedLine.IndexOf('[');
                     int quoteIndex = trimmmedLine.IndexOf("\"");
                     int lastQuoteIndex = trimmmedLine.LastIndexOf("\"");
-                    string headerKey = trimmmedLine.Substring(bracketIndex + 1,quoteIndex - (bracketIndex + 1)).Trim().ToLower();
+                    string headerKey = trimmmedLine.Substring(bracketIndex + 1, quoteIndex - (bracketIndex + 1)).Trim().ToLower();
                     string headerValue = trimmmedLine.Substring(quoteIndex + 1, lastQuoteIndex - quoteIndex - 1).Trim();
                     headers.Add(headerKey, headerValue);
                 }
@@ -129,147 +129,90 @@ namespace FileIO5D
             }
 
             //Turns into tokens.
+            string[] regexs =
+            {
+                "^/",
+                "^\\d+[WwBb]?\\.",
+                "^\\([+\\-]?\\d+T-?\\d+\\)[NBRQSKCYUDPW]?[a-z]?\\d{0,2}[a-z]\\d{1,2}(>+)?x?\\([+\\-]?\\d+T-?\\d+\\)\\S+(=[NBRQSKCYUDPW])?",
+                "^\\([+\\-]?\\d+T-?\\d+\\)[NBRQSKCYUDPW]?[a-z]?\\d{0,2}x?[a-z]\\d{1,2}(=[NBRQSKCYUDPW])?",
+                "^[NBRQSKCYUDPW]?[a-z]?\\d{0,2}x?[a-z]\\d{1,2}(=[NBRQSKCYUDPW])?",//TODO rework this. SAN Token
+                "^(\\([+\\-]?\\d+T-?\\d+\\))?0000",
+                "^(\\([+\\-]?\\d+T-?\\d+\\))?O-O-O",
+                "^(\\([+\\-]?\\d+T-?\\d+\\))?O-O",
+                "^\\(~T[+\\-]?(\\d+)\\)",
+                "^\\(>L([+\\-]?\\d+)\\)"
+            };
+            TokenType[] regextokens =
+            {
+                TokenType.TURNTERMINATOR,
+                TokenType.TURNINDICATOR,
+                TokenType.FULLCOORDINATE,
+                TokenType.HALFCOORDINATE,
+                TokenType.SAN,
+                TokenType.NULLMOVE,
+                TokenType.CASTLE,
+                TokenType.LONGCASTLE,
+                TokenType.PRESENTSHIFTED,
+                TokenType.LAYERCREATED,
+            };
             List<string> tokenString = new List<string>();
             List<TokenType> tokenTypes = new List<TokenType>();
-            foreach(string s in SANLines)
+            int lineIndex = 0;
+            int stringIndex = 0;
+            while (lineIndex < SANLines.Count)
             {
-                string sanLine = s;
-                Match turnIndicatorMatch = Regex.Match(sanLine, "^\\d*(w|W|b|B)?\\.");
-                if(turnIndicatorMatch.Success)
+                if (SANLines[lineIndex][stringIndex] == '{')
                 {
-                    tokenString.Add(turnIndicatorMatch.Value);
-                    tokenTypes.Add(TokenType.TURNINDICATOR);
-                    sanLine = sanLine.Substring(turnIndicatorMatch.Length);
+                    string comment = "";
+                    while (SANLines[lineIndex][stringIndex] != '}')
+                    {
+                        comment += SANLines[lineIndex][stringIndex];
+                        stringIndex++;
+                        if (stringIndex >= SANLines[lineIndex].Length)
+                        {
+                            stringIndex = 0;
+                            lineIndex++;
+                            if (lineIndex >= SANLines.Count)
+                            {
+                                throw new Exception("Invalid File. Comment does not contain } to end it");
+                            }
+                        }
+                    }
+                    comment += SANLines[lineIndex][stringIndex];
+                    tokenString.Add(comment);
+                    tokenTypes.Add(TokenType.COMMENT);
+                    stringIndex++;
                 }
-                string[] splitLine = sanLine.Trim().Split(' ');
-                bool commentStatus = false;
-                string comment = "";
-                foreach(string partial in splitLine)
+                for (int i = 0; i <= regexs.Length; i++)
                 {
-                    string part = partial;
-                    if(commentStatus)
+                    if (i == regexs.Length)
                     {
-                        if (part.Contains("}"))
-                        {
-                            commentStatus = false;
-                            comment += part.Substring(0, part.IndexOf("}") + 1);
-                            tokenString.Add(comment);
-                            tokenTypes.Add(TokenType.COMMENT);
-                            part = part.Substring(part.IndexOf("}") + 1);
-                            if (part.Length == 0){ continue; }
-                        }
-                        else
-                        {
-                            comment += ' ' + part;
-                            continue;
-                        }
+                        stringIndex++;
+                        break;
                     }
-                    if (part.Contains("{"))
-                    {
-                        commentStatus = true;
-                        comment += part.Substring(part.IndexOf("{"));
-                        part = part.Substring(0, part.IndexOf("{"));
-                        if (part.Length == 0) { continue; }
-                    }
-                    if(part.Length == 0) { continue; }
-                    if(part.Equals("/"))
-                    {
-                        tokenString.Add(part);
-                        tokenTypes.Add(TokenType.TURNTERMINATOR);
-                        continue;
-                    }
-                    Match halfCoordinateMatch = Regex.Match(part, "\\([+\\-]?\\d+T-?\\d+\\)[NBRQSKCYUDPW]?[a-z]?\\d{0,2}x?[a-z]\\d{1,2}(=[NBRQSKCYUDPW])?");
-                    Match fullCoordinateMatch = Regex.Match(part, "\\([+\\-]?\\d+T-?\\d+\\)[NBRQSKCYUDPW]?[a-z]?\\d{0,2}[a-z]\\d{1,2}(>+)?x?\\([+\\-]?\\d+T-?\\d+\\)\\S+(=[NBRQSKCYUDPW])?");
-                    Match simpleSANMatch = Regex.Match(part, "[NBRQSKCYUDPW]?[a-z]?\\d{0,2}x?[a-z]\\d{1,2}(=[NBRQSKCYUDPW])?");//TODO rework this.
-                    Match nullMoveMatch = Regex.Match(part, "(\\([+\\-]?\\d+T-?\\d+\\))?0000");
-                    Match castleMatch = Regex.Match(part, "(\\([+\\-]?\\d+T-?\\d+\\))?O-O");
-                    Match longCastleMatch = Regex.Match(part, "(\\([+\\-]?\\d+T-?\\d+\\))?O-O-O");
-                    Match timeshiftMatch = Regex.Match(part, "\\(~T[+\\-]?(\\d+)\\)");
-                    Match timelineCreatedMatch = Regex.Match(part, "\\(>L([+\\-]?\\d+)\\)");
-                    Match promotionMatch = Regex.Match(part, "=[NBRQSKCYUDPW]");
-                    if (promotionMatch.Success)
-                    {
-                        if(fullCoordinateMatch.Success)
-                        {
-                            tokenString.Add(fullCoordinateMatch.Value);
-                            tokenTypes.Add(TokenType.PROMOTION);
-                            continue;
-                        }
-                        if(halfCoordinateMatch.Success)
-                        {
-                            tokenString.Add(halfCoordinateMatch.Value);
-                            tokenTypes.Add(TokenType.PROMOTION);
-                            continue;
-                        }
-                        if (simpleSANMatch.Success)
-                        {
-                            tokenString.Add(simpleSANMatch.Value);
-                            tokenTypes.Add(TokenType.PROMOTION);
-                            continue;
-                        }
-                    }
-                    if(nullMoveMatch.Success)
-                    {
-                        tokenString.Add(nullMoveMatch.Value);
-                        tokenTypes.Add(TokenType.NULLMOVE);
-                        continue;
-                    }
-                    if (longCastleMatch.Success)
-                    {
-                        tokenString.Add(longCastleMatch.Value);
-                        tokenTypes.Add(TokenType.LONGCASTLE);
-                        continue;
-                    }
-                    if(castleMatch.Success)
-                    {
-                        tokenString.Add(castleMatch.Value);
-                        tokenTypes.Add(TokenType.CASTLE);
-                        continue;
-                    }
-                    if (fullCoordinateMatch.Success)
-                    {
-                        tokenString.Add(fullCoordinateMatch.Value);
-                        tokenTypes.Add(TokenType.FULLCOORDINATE);
-                        continue;
-                    }
-                    else if (halfCoordinateMatch.Success)
-                    {
-                        tokenString.Add(halfCoordinateMatch.Value);
-                        tokenTypes.Add(TokenType.HALFCOORDINATE);
-                        continue;
-                    }
-                    else if (simpleSANMatch.Success)
-                    {
-                        tokenString.Add(simpleSANMatch.Value);
-                        tokenTypes.Add(TokenType.SAN);//TODO make sure this is the right token.
-                        continue;
-                    }
-                    else if(timeshiftMatch.Success)
-                    {
-                        tokenString.Add(timeshiftMatch.Value);
-                        tokenTypes.Add(TokenType.PRESENTSHIFTED);
-                        continue;
-                    }
-                    else if (timelineCreatedMatch.Success)
-                    {
-                        tokenString.Add(timelineCreatedMatch.Value);
-                        tokenTypes.Add(TokenType.LAYERCREATED);
-                        continue;
-                    }
-                    tokenString.Add(part);
-                    tokenTypes.Add(TokenType.UNKNOWN);
+                    Match m = Regex.Match(SANLines[lineIndex].Substring(stringIndex), regexs[i]);
+                    if (!m.Success) continue;
+                    tokenString.Add(m.Value);
+                    tokenTypes.Add(regextokens[i]);
+                    stringIndex += m.Length;
+                    break;
+                }
+                if(stringIndex >= SANLines[lineIndex].Length)
+                {
+                    stringIndex = 0;
+                    lineIndex++;
                 }
             }
 
             //Parse the tokens.
             List<Turn> compiledTurns = new List<Turn>();
             List<Move> compiledMoves = new List<Move>();
-            for(int i = 0; i < tokenString.Count; i++)
+            for (int i = 0; i < tokenString.Count; i++)
             {
-                switch(tokenTypes[i])
+                switch (tokenTypes[i])
                 {
                     case TokenType.COMMENT:
-                    case TokenType.PRESENTSHIFTED: 
+                    case TokenType.PRESENTSHIFTED:
                     case TokenType.LAYERCREATED:
                         //eventually use this for analysis, right now throw it away.
                         break;
@@ -277,7 +220,7 @@ namespace FileIO5D
                     case TokenType.TURNTERMINATOR:
                         goto case TokenType.HALFTURNINDICATOR;
                     case TokenType.HALFTURNINDICATOR:
-                        if(compiledMoves.Count > 0)
+                        if (compiledMoves.Count > 0)
                         {
                             compiledTurns.Add(new Turn(compiledMoves.ToArray()));
                             compiledMoves.Clear();
@@ -291,12 +234,18 @@ namespace FileIO5D
                     case TokenType.FULLCOORDINATE:
                     case TokenType.HALFCOORDINATE:
                     case TokenType.SAN:
+                        if (tokenString[i].Contains('='))
+                        {
+                            Move sanPromotionMove = PromotionStringToMove(gsm, tokenString[i], evenStarters);
+                            compiledMoves.Add(sanPromotionMove);
+                            break;
+                        }
                         Move m = GetShadMove(gsm, tokenString[i], evenStarters);
                         compiledMoves.Add(m);
                         break;
                     case TokenType.NULLMOVE://TODO NEED NULL MOVES.
                         Move nullMove = GetNullMove(tokenString[i], evenStarters);
-                        if(!gsm.Color)
+                        if (!gsm.Color)
                         {
                             nullMove.SwapColor();
                         }
@@ -329,6 +278,294 @@ namespace FileIO5D
             }
             return gsm;
         }
+
+        public static GameStateManager Parse5dStudy(string fileLocation)
+        {
+            //Read in the file, initialize variables.
+            string[] lines = FileToLines(fileLocation);
+            List<string> fenBoards = new List<string>();
+            List<string> SANLines = new List<string>();
+            bool evenStarters = false;
+
+            //Separate moves by header, FEN, SAN
+            Dictionary<string, string> headers = new Dictionary<string, string>();
+            foreach (string line in lines)
+            {
+                string trimmmedLine = line.Trim();
+                if (trimmmedLine.Length == 0)
+                {
+                    continue;
+                }
+                if (trimmmedLine[0] == '[')
+                {
+                    if (trimmmedLine.Contains(":") && !trimmmedLine.Contains("\""))
+                    {
+                        fenBoards.Add(trimmmedLine);
+                        if (trimmmedLine.Contains("-0"))
+                        {
+                            evenStarters = true;
+                        }
+                        continue;
+                    }
+                    int bracketIndex = trimmmedLine.IndexOf('[');
+                    int quoteIndex = trimmmedLine.IndexOf("\"");
+                    int lastQuoteIndex = trimmmedLine.LastIndexOf("\"");
+                    string headerKey = trimmmedLine.Substring(bracketIndex + 1, quoteIndex - (bracketIndex + 1)).Trim().ToLower();
+                    string headerValue = trimmmedLine.Substring(quoteIndex + 1, lastQuoteIndex - quoteIndex - 1).Trim();
+                    headers.Add(headerKey, headerValue);
+                }
+                else
+                {
+                    SANLines.Add(line);
+                }
+            }
+
+            //Parse Headers.
+            string size = null;
+            string variant = null;
+            string color = null;
+            if (headers.ContainsKey("size")) size = headers["size"];
+            if (headers.ContainsKey("board")) variant = headers["board"];
+            if (headers.ContainsKey("color")) color = headers["color"];
+
+            //Determine if there is a variant that can be pulled from.
+            GameStateManager gsm = null;
+            Timeline[] starters;
+            if (variant != null)
+            {
+                string boardChosen = variant.Trim();
+                if (boardChosen.Equals("custom", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (size == null)
+                    {
+                        return null;
+                    }
+                    string[] dimensions = size.Split('x');
+                    int width = int.Parse(dimensions[0]);
+                    int height = int.Parse(dimensions[1]);
+                    int count = 0;
+                    starters = new Timeline[fenBoards.Count];
+                    foreach (string FEN in fenBoards)//TODO make sure the file is not passing in mutliple of the same timeline.
+                    {
+                        starters[count++] = GetTimelineFromString(FEN, width, height, evenStarters);
+                    }
+                    Array.Sort(starters);
+                    gsm = new GameStateManager(starters, width, height, evenStarters, true, starters[0].Layer, null);
+                }
+                else if (boardChosen.Equals("standard", StringComparison.OrdinalIgnoreCase))
+                {
+                    starters = new Timeline[1];
+                    starters[0] = GetTimelineFromString(STDBOARDFEN, 8, 8, false);
+                    gsm = new GameStateManager(starters, 8, 8, false, true, starters[0].Layer, null);
+                }
+                else if (boardChosen.Equals("standard-princess", StringComparison.OrdinalIgnoreCase))
+                {
+                    starters = new Timeline[1];
+                    starters[0] = GetTimelineFromString(STD_PRINCESS_BOARDFEN, 8, 8, false);
+                    gsm = new GameStateManager(starters, 8, 8, false, true, starters[0].Layer, null);
+                }
+            }
+            else
+            {
+                return null;
+            }
+
+            //reads color header. TODO not correctly set for T0......
+            if (color != null)
+            {
+                gsm.Color = color.Contains("white");
+            }
+
+            //Turns into tokens.
+            string[] regexs =
+            {
+                "^/",
+                "^\\d+[WwBb]?\\.",
+                "^\\([+\\-]?\\d+T-?\\d+\\)[NBRQSKCYUDPW]?[a-z]?\\d{0,2}[a-z]\\d{1,2}(>+)?x?\\([+\\-]?\\d+T-?\\d+\\)\\S+(=[NBRQSKCYUDPW])?",
+                "^\\([+\\-]?\\d+T-?\\d+\\)[NBRQSKCYUDPW]?[a-z]?\\d{0,2}x?[a-z]\\d{1,2}(=[NBRQSKCYUDPW])?",
+                "^[NBRQSKCYUDPW]?[a-z]?\\d{0,2}x?[a-z]\\d{1,2}(=[NBRQSKCYUDPW])?",//TODO rework this. SAN Token
+                "^(\\([+\\-]?\\d+T-?\\d+\\))?0000",
+                "^(\\([+\\-]?\\d+T-?\\d+\\))?O-O-O",
+                "^(\\([+\\-]?\\d+T-?\\d+\\))?O-O",
+                "^\\(~T[+\\-]?(\\d+)\\)",
+                "^\\(>L([+\\-]?\\d+)\\)"
+            };
+            TokenType[] regextokens =
+            {
+                TokenType.TURNTERMINATOR,
+                TokenType.TURNINDICATOR,
+                TokenType.FULLCOORDINATE,
+                TokenType.HALFCOORDINATE,
+                TokenType.SAN,
+                TokenType.NULLMOVE,
+                TokenType.CASTLE,
+                TokenType.LONGCASTLE,
+                TokenType.PRESENTSHIFTED,
+                TokenType.LAYERCREATED,
+            };
+            TreeNode<string> tokenTreeString = new TreeNode<string>("");
+            TreeNode<TokenType> tokenTree = new TreeNode<TokenType>(TokenType.UNKNOWN);
+            TreeNode<string> tokenStringIndex = tokenTreeString;
+            TreeNode<TokenType> tokenTreeIndex = tokenTree;
+            int lineIndex = 0;
+            int stringIndex = 0;
+            while (lineIndex < SANLines.Count)
+            {
+                if (SANLines[lineIndex][stringIndex] == '{')
+                {
+                    string comment = "";
+                    while (SANLines[lineIndex][stringIndex] != '}')
+                    {
+                        comment += SANLines[lineIndex][stringIndex];
+                        stringIndex++;
+                        if (stringIndex >= SANLines[lineIndex].Length)
+                        {
+                            stringIndex = 0;
+                            lineIndex++;
+                            comment += '\n';
+                            if (lineIndex >= SANLines.Count)
+                            {
+                                throw new Exception("Invalid File. Comment does not contain } to end it");
+                            }
+                        }
+                    }
+                    comment += SANLines[lineIndex][stringIndex];
+                    stringIndex++;
+                    if(comment.Substring(0,6).Equals("{[%cal"))
+                    {
+                        tokenStringIndex = tokenStringIndex.AddChild(comment);
+                        tokenTreeIndex = tokenTreeIndex.AddChild(TokenType.ARROWS);
+                    }
+                    else if(comment.Substring(0, 6).Equals("{[%csl"))
+                    {
+                        tokenStringIndex = tokenStringIndex.AddChild(comment);
+                        tokenTreeIndex = tokenTreeIndex.AddChild(TokenType.HIGHLIGHTS);
+                    }
+                    else if (comment.Substring(0, 3).Equals("{%c"))
+                    {
+                        tokenStringIndex = tokenStringIndex.AddChild(comment);
+                        tokenTreeIndex = tokenTreeIndex.AddChild(TokenType.DESCRIPTION);
+                    }
+                    else
+                    {
+                        TreeNode<string> turnStringParent = tokenStringIndex;
+                        TreeNode<TokenType> turnParent = tokenTreeIndex;
+                        while(turnParent.value != TokenType.TURNTERMINATOR && turnParent.value != TokenType.TURNINDICATOR)
+                        {
+                            turnStringParent = turnStringParent.Parent;
+                            turnParent = turnParent.Parent;
+                        }
+                        TokenizeSideline(turnStringParent, turnParent, comment);
+                    }
+                }
+                for (int i = 0; i <= regexs.Length; i++)
+                {
+                    if (i == regexs.Length)
+                    {
+                        stringIndex++;
+                        break;
+                    }
+                    Match m = Regex.Match(SANLines[lineIndex].Substring(stringIndex), regexs[i]);
+                    if (!m.Success) continue;
+                    tokenStringIndex = tokenStringIndex.AddChild(m.Value);
+                    tokenTreeIndex = tokenTreeIndex.AddChild(regextokens[i]);
+                    stringIndex += m.Length;
+                    break;
+                }
+                if (stringIndex >= SANLines[lineIndex].Length)
+                {
+                    stringIndex = 0;
+                    lineIndex++;
+                }
+            }
+            tokenTreeString.ToString();
+            Console.WriteLine(tokenTreeString.ToString());
+            //Parse the tokens.
+            List<Turn> compiledTurns = new List<Turn>();
+            List<Move> compiledMoves = new List<Move>();
+            tokenStringIndex = tokenTreeString;
+            tokenTreeIndex = tokenTree;
+            while(tokenTreeIndex.Children.Count > 0)
+            {
+                tokenTreeIndex = tokenTreeIndex.Children[0];
+                tokenStringIndex = tokenStringIndex.Children[0];
+                string tokenString = tokenStringIndex.value;
+                switch (tokenTreeIndex.value)
+                {
+                    case TokenType.COMMENT:
+                    case TokenType.PRESENTSHIFTED:
+                    case TokenType.LAYERCREATED:
+                        //eventually use this for analysis, right now throw it away.
+                        break;
+                    case TokenType.TURNINDICATOR:
+                    case TokenType.TURNTERMINATOR:
+                        goto case TokenType.HALFTURNINDICATOR;
+                    case TokenType.HALFTURNINDICATOR:
+                        if (compiledMoves.Count > 0)
+                        {
+                            compiledTurns.Add(new Turn(compiledMoves.ToArray()));
+                            compiledMoves.Clear();
+                            bool turnStatus = gsm.MakeTurn(compiledTurns[compiledTurns.Count - 1]);//List.Last() doesn't work on godot.
+                            if (!turnStatus)
+                            {
+                                throw new Exception("Turn not properly added to gamestate.");
+                            }
+                        }
+                        break;
+                    case TokenType.FULLCOORDINATE:
+                    case TokenType.HALFCOORDINATE:
+                    case TokenType.SAN:
+                        if (tokenString.Contains('='))
+                        {
+                            Move sanPromotionMove = PromotionStringToMove(gsm, tokenString, evenStarters);
+                            compiledMoves.Add(sanPromotionMove);
+                            break;
+                        }
+                        Move m = GetShadMove(gsm, tokenString, evenStarters);
+                        compiledMoves.Add(m);
+                        break;
+                    case TokenType.NULLMOVE:
+                        Move nullMove = GetNullMove(tokenString, evenStarters);
+                        if (!gsm.Color)
+                        {
+                            nullMove.SwapColor();
+                        }
+                        compiledMoves.Add(nullMove);
+                        break;
+                    case TokenType.PROMOTION:
+                        Move promotionMove = PromotionStringToMove(gsm, tokenString, evenStarters);
+                        compiledMoves.Add(promotionMove);
+                        break;
+                    case TokenType.CASTLE:
+                    case TokenType.LONGCASTLE:
+                        Move castleMove = FindCastleMove(gsm, tokenString, evenStarters);
+                        compiledMoves.Add(castleMove);
+                        break;
+                    case TokenType.ARROWS:
+                        ParseArrows(tokenString, gsm);
+                        break;
+                    case TokenType.HIGHLIGHTS:
+                        ParseHighlights(tokenString, gsm);
+                        break;
+                    case TokenType.UNKNOWN:
+                        throw new Exception("Unknown token detected");
+                        break;
+                }
+            }
+            //Add Final Move if needed.
+            if (compiledMoves.Count > 0)
+            {
+                compiledTurns.Add(new Turn(compiledMoves.ToArray()));
+                compiledMoves.Clear();
+                bool turnStatus = gsm.MakeTurn(compiledTurns[compiledTurns.Count - 1]);
+                if (!turnStatus)
+                {
+                    throw new Exception("Turn not properly added to gamestate.");
+                }
+            }
+            return gsm;
+        }
+
 
         /// <summary>
         /// Parses a FEN, returns a timeline TODO must ensure that fen boards for the same timeline are properly parsed.
@@ -503,12 +740,12 @@ namespace FileIO5D
 
         public static Move PromotionStringToMove(GameState g, string move, bool evenStarters)
         {
-            Move returnMove = GetShadMove(g, move.Substring(0,move.IndexOf("=")), evenStarters);
-            int promotionType = Board.PieceCharToInt(move[move.Length-1]);
-            if(!g.Color)
+            Move returnMove = GetShadMove(g, move.Substring(0, move.IndexOf("=")), evenStarters);
+            int promotionType = Board.PieceCharToInt(move[move.Length - 1]);
+            if (!g.Color)
             {
                 promotionType += Board.NUMTYPES;
-            }    
+            }
             returnMove.SpecialType = promotionType;
             return returnMove;
         }
@@ -519,7 +756,7 @@ namespace FileIO5D
             if (move.Contains("(") && move.IndexOf("(") != move.LastIndexOf("("))
             {
                 Move parsedMove = FullStringToCoord(move, evenStarters);
-                if(!g.Color)
+                if (!g.Color)
                 {
                     parsedMove.SwapColor();
                 }
@@ -665,7 +902,7 @@ namespace FileIO5D
             if (temporalMatch.Success)
             {
                 temporalCoordString = temporalMatch.Value;
-                temporalCoord = TemporalToCoord(temporalCoordString,evenStarters);
+                temporalCoord = TemporalToCoord(temporalCoordString, evenStarters);
                 sanCoordString = halfmove.Substring(temporalMatch.Index + temporalMatch.Length);
             }
             else
@@ -675,11 +912,11 @@ namespace FileIO5D
 
             //the rest is the san Coord.
             Match SANMatch = Regex.Match(sanCoordString, "[a-z]\\d+");
-            if(SANMatch.Success)
+            if (SANMatch.Success)
             {
                 //this is needed if for example you have something like Ne7e4
                 Match lastSANMatch = Regex.Match(sanCoordString.Substring(SANMatch.Index + 2), "[a-z]\\d+");
-                if(lastSANMatch.Success)
+                if (lastSANMatch.Success)
                 {
                     SANMatch = lastSANMatch;
                 }
@@ -687,8 +924,8 @@ namespace FileIO5D
 
             sanCoordString = SANMatch.Value;
             CoordFive sanCoord = SANToCoord(sanCoordString);
-            
-            return CoordFive.Add(sanCoord,temporalCoord);
+
+            return CoordFive.Add(sanCoord, temporalCoord);
         }
 
         /// <summary>
@@ -703,6 +940,25 @@ namespace FileIO5D
             int T = int.Parse(temporal.Substring(temporal.IndexOf('T') + 1, temporal.IndexOf(')') - temporal.IndexOf('T') - 1));
             int L = ParseLayer(temporal.Substring(1, temporal.IndexOf('T') - 1), evenStarters);
             return new CoordFive(0, 0, T, L);
+        }
+
+
+        /// <summary>
+        /// This parses my coordinates. for example (w.0T0)
+        /// </summary>
+        /// <param name="temporal"></param>
+        /// <param name="evenstarters"></param>
+        /// <returns></returns>
+        public static CoordFive ParseColoredTemporalCoord(string temporal, bool evenStarters)
+        {
+            int T = int.Parse(temporal.Substring(temporal.IndexOf('T') + 1, temporal.IndexOf(')') - temporal.IndexOf('T') - 1));
+            int L = ParseLayer(temporal.Substring(3, temporal.IndexOf('T') - 3), evenStarters);
+            bool color = false;
+            if (temporal[1] == 'w' || temporal[1] == 'W')
+            {
+                color = true;
+            }
+            return new CoordFive(0, 0, T, L,color);
         }
 
         /// <summary>
@@ -787,6 +1043,179 @@ namespace FileIO5D
             CoordFive c1 = ParseRawCoordinate(coord1);
             CoordFive c2 = ParseRawCoordinate(coord2);
             return new Move(c1, c2);
+        }
+
+        public static CoordFive ParseRawSHADSquare(string coord, bool evenStarters)
+        {
+            CoordFive temporal = ParseColoredTemporalCoord(coord.Substring(0, coord.IndexOf(')') + 1), evenStarters);
+            CoordFive san = SANToCoord(coord.Substring(coord.IndexOf(')') + 1));
+            temporal.Add(san);
+            return temporal;
+        }
+
+        public static Move ParseRawSHADMove(string coord, bool evenStarters)
+        {
+            CoordFive temporal = ParseColoredTemporalCoord(coord.Substring(0, coord.IndexOf(')')),evenStarters);
+            CoordFive c1 = SANToCoord(coord.Substring(coord.IndexOf(')') + 1,2));
+            CoordFive c2 = SANToCoord(coord.Substring(coord.Length - 2)); // TODO this wont work for things like c24 ( boards with > 9 squares tall)
+            c1.Add(temporal);
+            c2.Add(temporal);
+            c1.Color = temporal.Color;
+            c2.Color = temporal.Color; 
+            return new Move(c1, c2);
+        }
+
+        public static void ParseHighlights(string highlightsString, GameStateManager gsm)
+        {
+            AnnotatedTurn at = gsm.Index.AT;
+            string[] highlights = highlightsString.Split(' ');
+            for (int i = 1; i < highlights.Length - 1; i++)
+            {
+                string highlight = highlights[i];
+                CoordFive coord = ParseRawSHADSquare(highlight.Substring(1), gsm.EvenStart);
+                int color = 0;
+                switch (highlight[0])
+                {
+                    case 'R':
+                        color = (int)AnnotatedTurn.AnnotationColors.RED;
+                        break;
+
+                    case 'B':
+                        color = (int)AnnotatedTurn.AnnotationColors.BLUE;
+                        break;
+
+                    case 'G':
+                        color = (int)AnnotatedTurn.AnnotationColors.GREEN;
+                        break;
+                }
+                at.HighlightColors.Add(color);
+                at.Highlights.Add(coord);
+            }
+        }
+
+        public static void ParseArrows(string arrowString, GameStateManager gsm)
+        {
+            AnnotatedTurn at = gsm.Index.AT;
+            string[] arrows = arrowString.Split(' ');
+            for(int i = 1; i < arrows.Length - 1; i++)
+            {
+                string arrow = arrows[i];
+                Move m = ParseRawSHADMove(arrow.Substring(1), gsm.EvenStart);
+                int color = 0;
+                switch (arrow[0])
+                {
+                    case 'R':
+                        color = (int)AnnotatedTurn.AnnotationColors.RED;
+                        break;
+
+                    case 'B':
+                        color = (int)AnnotatedTurn.AnnotationColors.BLUE;
+                        break;
+
+                    case 'G':
+                        color = (int)AnnotatedTurn.AnnotationColors.GREEN;
+                        break;
+                }
+                at.ArrowColors.Add(color);
+                at.Arrows.Add(m);
+            }
+        }
+
+        public static void TokenizeSideline(TreeNode<string> stringParent, TreeNode<TokenType> tokenParent, string comment)
+        {
+            string[] regexs =
+            {
+                "^/",
+                "^\\d+[WwBb]?\\.",
+                "^\\([+\\-]?\\d+T-?\\d+\\)[NBRQSKCYUDPW]?[a-z]?\\d{0,2}[a-z]\\d{1,2}(>+)?x?\\([+\\-]?\\d+T-?\\d+\\)\\S+(=[NBRQSKCYUDPW])?",
+                "^\\([+\\-]?\\d+T-?\\d+\\)[NBRQSKCYUDPW]?[a-z]?\\d{0,2}x?[a-z]\\d{1,2}(=[NBRQSKCYUDPW])?",
+                "^[NBRQSKCYUDPW]?[a-z]?\\d{0,2}x?[a-z]\\d{1,2}(=[NBRQSKCYUDPW])?",//TODO rework this. SAN Token
+                "^(\\([+\\-]?\\d+T-?\\d+\\))?0000",
+                "^(\\([+\\-]?\\d+T-?\\d+\\))?O-O-O",
+                "^(\\([+\\-]?\\d+T-?\\d+\\))?O-O",
+                "^\\(~T[+\\-]?(\\d+)\\)",
+                "^\\(>L([+\\-]?\\d+)\\)"
+            };
+            TokenType[] regextokens =
+            {
+                TokenType.TURNTERMINATOR,
+                TokenType.TURNINDICATOR,
+                TokenType.FULLCOORDINATE,
+                TokenType.HALFCOORDINATE,
+                TokenType.SAN,
+                TokenType.NULLMOVE,
+                TokenType.CASTLE,
+                TokenType.LONGCASTLE,
+                TokenType.PRESENTSHIFTED,
+                TokenType.LAYERCREATED,
+            };
+            TreeNode<string> tokenTreeString = new TreeNode<string>("");
+            TreeNode<TokenType> tokenTree = new TreeNode<TokenType>(TokenType.SIDELINE);
+            TreeNode<string> tokenStringIndex = tokenTreeString;
+            TreeNode<TokenType> tokenTreeIndex = tokenTree;
+            int strIndex = 1;//Dont include the first {, otherwise its recursive infinitely.
+            while (strIndex < comment.Length)
+            {
+                if (comment[strIndex] == '{')
+                {
+                    string subComment = "";
+                    while (comment[strIndex] != '}')
+                    {
+                        subComment += comment[strIndex];
+                        strIndex++;
+                        if (strIndex >= comment.Length)
+                        {
+                            throw new Exception("Invalid File. Comment does not contain } to end it");
+                        }
+                    }
+                    subComment += comment[strIndex];
+                    if (subComment.Substring(0, 6).Equals("{[%cal"))
+                    {
+                        tokenStringIndex = tokenStringIndex.AddChild(subComment);
+                        tokenTreeIndex = tokenTreeIndex.AddChild(TokenType.ARROWS);
+                        strIndex++;
+                    }
+                    else if (subComment.Substring(0, 6).Equals("{[%csl"))
+                    {
+                        tokenStringIndex = tokenStringIndex.AddChild(subComment);
+                        tokenTreeIndex = tokenTreeIndex.AddChild(TokenType.HIGHLIGHTS);
+                        strIndex++;
+                    }
+                    else if (subComment.Substring(0, 3).Equals("{%c"))
+                    {
+                        tokenStringIndex = tokenStringIndex.AddChild(subComment);
+                        tokenTreeIndex = tokenTreeIndex.AddChild(TokenType.DESCRIPTION);
+                        strIndex++;
+                    }
+                    else
+                    {
+                        TreeNode<string> turnStringParent = tokenStringIndex;
+                        TreeNode<TokenType> turnParent = tokenTreeIndex;
+                        while (turnParent.value != TokenType.TURNTERMINATOR || turnParent.value != TokenType.TURNTERMINATOR)
+                        {
+                            turnStringParent = turnStringParent.Parent;
+                            turnParent = turnParent.Parent;
+                        }
+                        TokenizeSideline(turnStringParent, turnParent, comment);
+                    }
+                }
+                for (int i = 0; i <= regexs.Length; i++)
+                {
+                    if (i == regexs.Length)
+                    {
+                        strIndex++;
+                        break;
+                    }
+                    Match m = Regex.Match(comment.Substring(strIndex), regexs[i]);
+                    if (!m.Success) continue;
+                    tokenStringIndex = tokenStringIndex.AddChild(m.Value);
+                    tokenTreeIndex = tokenTreeIndex.AddChild(regextokens[i]);
+                    strIndex += m.Length;
+                    break;
+                }
+            }
+            tokenParent.Children.Add(tokenTree);
+            stringParent.Children.Add(tokenTreeString);
         }
     }
 }

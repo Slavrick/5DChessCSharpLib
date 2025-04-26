@@ -1,7 +1,9 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using Test;
 using TestRewrite;
+using FileIO5D;
 
+FENParser.Parse5dStudy("C:\\Users\\mavmi\\Downloads\\sidelineexporttest.PGN5S");
 
 FENParserTest.TestFENFileParser();
 TurnTreeTester.TestRewind();

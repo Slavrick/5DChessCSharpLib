@@ -159,6 +159,7 @@ namespace FileIO5D
             returnstring += StringUtils.AnnotatedTurnExportString(node.AT);
             if(node.Children.Count > 0)
             {
+
                 returnstring += " {";
                 for(int i = 0; i < node.Children.Count; i++)
                 {
