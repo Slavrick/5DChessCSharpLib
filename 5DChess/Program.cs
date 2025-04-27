@@ -3,7 +3,7 @@ using Test;
 using TestRewrite;
 using FileIO5D;
 
-FENParser.Parse5dStudy("C:\\Users\\mavmi\\Downloads\\longsidelinetest.txt.PGN5S");
+FENParser.Parse5dStudy("C:\\Users\\mavmi\\Downloads\\testtesttest.PGN5S");
 
 FENParserTest.TestFENFileParser();
 TurnTreeTester.TestRewind();

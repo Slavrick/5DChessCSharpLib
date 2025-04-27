@@ -12,7 +12,7 @@ namespace FiveDChess
         public AnnotationTree ATR;
         public AnnotationTree.Node Index;
         public int CurrTurn;
-
+        public bool StartColor = true;
 
         public GameStateManager(Timeline[] origins, int width, int height, bool evenStart, bool color, int minTL, Move[] moves)
             : base(origins, width, height, evenStart, color, minTL, moves)

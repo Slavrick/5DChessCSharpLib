@@ -109,7 +109,6 @@ namespace Test
             FENParser.ShadSTDGSM("C:\\Users\\mavmi\\Documents\\5DRewrite\\5DChess\\5DChess\\PGN\\testPGNs\\CastleTest3.txt");
             FENParser.ShadSTDGSM("C:\\Users\\mavmi\\Documents\\5DRewrite\\5DChess\\5DChess\\PGN\\testPGNs\\CastleTest4.txt");
             FENParser.ShadSTDGSM("C:\\Users\\mavmi\\Documents\\5DRewrite\\5DChess\\5DChess\\PGN\\testPGNs\\PromotionTest.PGN5.txt");
-            FENParser.ShadSTDGSM("C:\\Users\\mavmi\\Downloads\\new 6.txt");
             Console.WriteLine(" passed.");
 		}
 

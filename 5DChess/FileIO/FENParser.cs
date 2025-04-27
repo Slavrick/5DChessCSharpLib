@@ -373,10 +373,12 @@ namespace FileIO5D
             //reads color header. TODO not correctly set for T0......
             if (color != null)
             {
-                gsm.Color = color.Contains("white");
+                gsm.Color = color.ToLower().Contains("white");
+                if(!gsm.Color)
+                {
+                    gsm.StartColor = false;
+                }
             }
-
-
             TreeNode<string> tokenTreeString = new TreeNode<string>("");
             TreeNode<TokenType> tokenTree = new TreeNode<TokenType>(TokenType.UNKNOWN);
 
