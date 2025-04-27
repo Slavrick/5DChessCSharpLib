@@ -82,7 +82,21 @@ namespace Test
 			CoordTester.TestCoord(f2.Dest, 6, 2, 2, 0);
 			CoordTester.TestCoord(f3.Origin, 2, 2, 5, 0);
 			CoordTester.TestCoord(f3.Dest, 5, 6, 1, 0);
-		}
+			CoordFive h10 = FENParser.ParseRawSHADSquare("(w.0T2)b4",false);
+            CoordFive h11 = FENParser.ParseRawSHADSquare("(W.10T2)e5", false);
+            CoordFive h12 = FENParser.ParseRawSHADSquare("(b.0T20)c5", false);
+            CoordFive h13 = FENParser.ParseRawSHADSquare("(B.+0T2)c5", true);
+			CoordTester.TestCoordColored(h10,1,3,2,0,true);
+			CoordTester.TestCoordColored(h11, 4, 4, 2, 10, true);
+            CoordTester.TestCoordColored(h12, 2, 4, 20, 0, false);
+            CoordTester.TestCoordColored(h13, 2, 4, 2, 1, false);
+			Move m1 = FENParser.ParseRawSHADMove("(b.0T1)a3(0T1)h3",false);
+            Move m2 = FENParser.ParseRawSHADMove("(w.0T2)a3(0T1)h3", false);
+			CoordTester.TestCoordColored(m1.Origin, 0, 2, 1, 0, false);
+            CoordTester.TestCoord(m1.Dest, 7, 2, 1, 0);
+            CoordTester.TestCoordColored(m2.Origin, 0, 2, 2, 0, true);
+            CoordTester.TestCoord(m2.Dest, 7, 2, 1, 0);
+        }
 
 		public static void TestShadFEN()
 		{

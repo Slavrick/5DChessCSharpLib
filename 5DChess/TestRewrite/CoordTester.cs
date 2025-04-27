@@ -57,5 +57,13 @@ namespace Test
 				throw new Exception("Assertion failed: Coord values do not match");
 			}
 		}
-	}
+
+        public static void TestCoordColored(CoordFive test, int x, int y, int T, int L, bool color)
+        {
+            if (test.X != x || test.Y != y || test.T != T || test.L != L || test.Color != color)
+            {
+                throw new Exception("Assertion failed: Coord values do not match");
+            }
+        }
+    }
 }
